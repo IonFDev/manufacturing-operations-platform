@@ -1,0 +1,67 @@
+services:
+
+  app:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    container_name: manufacturing_app
+    working_dir: /var/www/html
+    volumes:
+      - .:/var/www/html
+      - manufacturing_vendor:/var/www/html/vendor
+    depends_on:
+      - mysql
+    networks:
+      - manufacturing
+
+  nginx:
+    image: nginx:alpine
+    container_name: manufacturing_nginx
+    ports:
+      - "8000:80"
+    volumes:
+      - .:/var/www/html
+      - manufacturing_vendor:/var/www/html/vendor
+      - ./docker/nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - app
+    networks:
+      - manufacturing
+
+  mysql:
+    image: mysql:8.4
+    container_name: manufacturing_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: manufacturing
+      MYSQL_USER: manufacturing
+      MYSQL_PASSWORD: manufacturing
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - manufacturing
+
+  node:
+    image: node:22-alpine
+    container_name: manufacturing_node
+    working_dir: /var/www/html
+    volumes:
+      - .:/var/www/html
+      - manufacturing_node_modules:/var/www/html/node_modules
+    ports:
+      - "5173:5173"
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    networks:
+      - manufacturing
+
+volumes:
+  mysql_data:
+  manufacturing_vendor:
+  manufacturing_node_modules:
+
+networks:
+  manufacturing:
+    driver: bridge
