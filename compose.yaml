@@ -44,6 +44,22 @@ services:
     networks:
       - manufacturing
 
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: manufacturing_phpmyadmin
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      PMA_USER: manufacturing
+      PMA_PASSWORD: manufacturing
+    depends_on:
+      - mysql
+    networks:
+      - manufacturing
+
   node:
     image: node:22-alpine
     container_name: manufacturing_node
@@ -58,10 +74,14 @@ services:
       - manufacturing
 
 volumes:
+
   mysql_data:
+
   manufacturing_vendor:
+
   manufacturing_node_modules:
 
 networks:
+
   manufacturing:
     driver: bridge
